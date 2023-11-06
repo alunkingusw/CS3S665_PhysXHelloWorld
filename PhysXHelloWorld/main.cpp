@@ -1,5 +1,7 @@
 #include <ctype.h>
 #include <iostream>
+#include <chrono>
+#include <thread>
 #include "PxPhysicsAPI.h"
 using namespace physx;
 
@@ -35,7 +37,7 @@ int main() {
     sceneDesc.flags |= PxSceneFlag::eENABLE_ACTIVE_ACTORS;
 
     // Set up a default CPU dispatcher
-    PxDefaultCpuDispatcher* cpuDispatcher = PxDefaultCpuDispatcherCreate(2);  // 2 threads
+    PxDefaultCpuDispatcher* cpuDispatcher = PxDefaultCpuDispatcherCreate(1);  // 2 threads
     sceneDesc.cpuDispatcher = cpuDispatcher;
 
     // Set up a default filter shader (you can replace this with your own filter shader if needed)
@@ -80,8 +82,9 @@ int main() {
         scene->addActor(*box);
     }
 
+    std::chrono::steady_clock::time_point lastFrameTime = std::chrono::high_resolution_clock::now();
     
-    const float timeStep = 1.0f / 60.0f;
+    const float timeStep = 1.0f / 30.0f;
     while (true) {
         // Process input, update game state, etc. (you can add your game logic here)
 
@@ -89,9 +92,17 @@ int main() {
         scene->simulate(timeStep);
         scene->fetchResults(true);
 
+
         // Add a sleep or some form of synchronization to control the frame rate
+        std::chrono::duration<float> elapsedTime = std::chrono::duration_cast<std::chrono::duration<float>>(std::chrono::high_resolution_clock::now() - lastFrameTime);
         // (Note: This is a simple example and may not be suitable for more complex games)
-        // Sleep for approximately 16 milliseconds (60 FPS)
+        if (elapsedTime.count() < timeStep) {
+            std::this_thread::sleep_for(std::chrono::duration<float>(timeStep - elapsedTime.count()));
+        }
+
+        //update the last frame time
+        lastFrameTime = std::chrono::high_resolution_clock::now();
+
     }
 
     // Clean up
