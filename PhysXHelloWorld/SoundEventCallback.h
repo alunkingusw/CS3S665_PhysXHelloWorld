@@ -27,5 +27,6 @@ struct FilterGroup {
 	enum Enum {
 		eBOX = (1 << 0),
 		eFLOOR = (1 << 1),
+		eCHARACTER = (1 << 2),
 	};
 };

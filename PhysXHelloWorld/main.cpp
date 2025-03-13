@@ -4,6 +4,7 @@
 #include <thread>
 #include "PxPhysicsAPI.h"
 #include "SoundEventCallback.h"
+#include "CharacterController.h"
 using namespace physx;
 
 PxPvd* mPvd = NULL;
@@ -91,6 +92,19 @@ int main() {
         scene->addActor(*box);
     }
 
+    //create a controller manager
+    PxControllerManager* controllerManager = PxCreateControllerManager(*scene);
+
+    // Create Character instance
+    CharacterController character(controllerManager, scene);
+
+
+    // Call createCharacter to initialize the character
+    physx::PxMaterial* characterMaterial = physics->createMaterial(0.5f, 0.5f, 0.1f);
+
+    character.createCharacter(physx::PxExtendedVec3(5.0, 0.5, 5.0), characterMaterial);
+    //scene->addActor(character);
+
     std::chrono::steady_clock::time_point lastFrameTime = std::chrono::high_resolution_clock::now();
     
     const float timeStep = 1.0f / 60.0f;
@@ -101,7 +115,8 @@ int main() {
         // Simulate the scene
         scene->simulate(timeStep*slowMotionFactor);
         scene->fetchResults(true);
-
+        
+        character.update();
 
         // Add a sleep or some form of synchronization to control the frame rate
         std::chrono::duration<float> elapsedTime = std::chrono::duration_cast<std::chrono::duration<float>>(std::chrono::high_resolution_clock::now() - lastFrameTime);
@@ -116,6 +131,7 @@ int main() {
     }
 
     // Clean up
+    controllerManager->purgeControllers();
     scene->release();
     physics->release();
     mFoundation->release();

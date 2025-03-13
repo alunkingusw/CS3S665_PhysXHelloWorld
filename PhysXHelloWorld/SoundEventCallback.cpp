@@ -22,6 +22,10 @@ void SoundEventCallback::onContact(const physx::PxContactPairHeader& pairHeader,
 				(typeA == FilterGroup::eFLOOR && typeB == FilterGroup::eBOX)) {
 				std::cout << "Box hit the Floor!" << std::endl;
 			}
+			else if ((typeA == FilterGroup::eBOX && typeB == FilterGroup::eCHARACTER) ||
+				(typeA == FilterGroup::eCHARACTER && typeB == FilterGroup::eBOX)) {
+				std::cout << "Character hit the Box!" << std::endl;
+			}
 			else {
 				std::cout << "Unknown collision detected!" << std::endl;
 			}
