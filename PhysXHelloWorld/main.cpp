@@ -3,6 +3,7 @@
 #include <chrono>
 #include <thread>
 #include "PxPhysicsAPI.h"
+#include "SoundEventCallback.h"
 using namespace physx;
 
 PxPvd* mPvd = NULL;
@@ -40,8 +41,12 @@ int main() {
     PxDefaultCpuDispatcher* cpuDispatcher = PxDefaultCpuDispatcherCreate(1);  // 2 threads
     sceneDesc.cpuDispatcher = cpuDispatcher;
 
-    // Set up a default filter shader (you can replace this with your own filter shader if needed)
-    sceneDesc.filterShader = PxDefaultSimulationFilterShader;
+    //create collision callback instance
+    SoundEventCallback collisionCallback;
+
+    // Set up the SoundEventCallback as our filter shader
+    sceneDesc.filterShader = &boxCollisionFilterShader;
+    sceneDesc.simulationEventCallback = &collisionCallback;
 
     PxScene* scene = physics->createScene(sceneDesc);
 
@@ -68,6 +73,7 @@ int main() {
     PxMaterial* groundMaterial = physics->createMaterial(0.5f, 0.5f, 0.1f);
     PxTransform groundTransform = PxTransform(PxQuat(PxHalfPi, PxVec3(0, 0, 1)));
     PxRigidStatic* groundPlane = PxCreateStatic(*physics, groundTransform, PxPlaneGeometry(), *groundMaterial);
+    setupFiltering(groundPlane, FilterGroup::eFLOOR, FilterGroup::eBOX);
     scene->addActor(*groundPlane);
 
     // Create stacked boxes
@@ -79,17 +85,21 @@ int main() {
         PxTransform boxTransform(PxVec3(0.0f, i * (2 * boxHalfExtent + boxSpacing), 0.0f));
         PxBoxGeometry boxGeometry(PxVec3(boxHalfExtent, boxHalfExtent, boxHalfExtent));
         PxRigidDynamic* box = PxCreateDynamic(*physics, boxTransform, boxGeometry, *boxMaterial, 1.0f);
+        box->setActorFlag(PxActorFlag::eSEND_SLEEP_NOTIFIES, true);
+        setupFiltering(box, FilterGroup::eBOX, FilterGroup::eBOX | FilterGroup::eFLOOR);
+        //setupFiltering(box, FilterGroup::eBOX, FilterGroup::eFLOOR);
         scene->addActor(*box);
     }
 
     std::chrono::steady_clock::time_point lastFrameTime = std::chrono::high_resolution_clock::now();
     
-    const float timeStep = 1.0f / 30.0f;
+    const float timeStep = 1.0f / 60.0f;
+    const float slowMotionFactor = 0.05f;
     while (true) {
         // Process input, update game state, etc. (you can add your game logic here)
 
         // Simulate the scene
-        scene->simulate(timeStep);
+        scene->simulate(timeStep*slowMotionFactor);
         scene->fetchResults(true);
 
 

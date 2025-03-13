@@ -132,6 +132,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="SoundEventCallback.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="SoundEventCallback.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
